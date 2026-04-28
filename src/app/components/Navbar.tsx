@@ -28,7 +28,7 @@ export default function NavBar({ user }: { user: User | null }) {
   const navLinks = [
     {
       href: isClientRole(user?.role) ? "/client-area" : "/dashboard",
-      label: isClientRole(user?.role) ? "Area do cliente" : "Dashboard",
+      label: isClientRole(user?.role) ? "Criar ticket" : "Dashboard",
       icon: isClientRole(user?.role) ? Building2 : LayoutDashboard,
       show: isLoggedIn && user?.role !== "guest",
     },
