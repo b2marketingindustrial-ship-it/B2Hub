@@ -76,7 +76,7 @@ export default function Login() {
 
       toast.success(data.message);
       setTimeout(() => {
-        router.push("/Dashboard");
+        router.push("/dashboard");
       }, 900);
     } catch {
       toast.error("Nao foi possivel conectar ao login.");

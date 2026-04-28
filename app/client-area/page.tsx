@@ -51,7 +51,7 @@ export default function ClientAreaPage() {
     }
 
     if (user.role !== "client") {
-      router.replace("/Dashboard");
+      router.replace("/dashboard");
       return;
     }
 
