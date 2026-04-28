@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   BarChart3,
   Building2,
@@ -47,6 +47,16 @@ export default function Dashboard() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [clientSearch, setClientSearch] = useState("");
 
+  const loadTasks = useCallback(async ({ showLoading = false } = {}) => {
+    if (showLoading) {
+      setLoading(true);
+    }
+
+    const data = await getTasks();
+    setTasks(data);
+    setLoading(false);
+  }, []);
+
   useEffect(() => {
     if (!user) {
       return;
@@ -62,8 +72,8 @@ export default function Dashboard() {
       return;
     }
 
-    void loadTasks();
-  }, [user, router]);
+    void loadTasks({ showLoading: true });
+  }, [loadTasks, user, router]);
 
   useEffect(() => {
     if (!user || user.role === "guest" || isClientRole(user.role)) {
@@ -84,14 +94,7 @@ export default function Dashboard() {
       window.clearInterval(intervalId);
       window.removeEventListener("focus", handleFocus);
     };
-  }, [user]);
-
-  async function loadTasks() {
-    setLoading(true);
-    const data = await getTasks();
-    setTasks(data);
-    setLoading(false);
-  }
+  }, [loadTasks, user]);
 
   function isLate(task: Task): boolean {
     if (!task.date || task.status === "done") {

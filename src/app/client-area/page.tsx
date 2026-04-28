@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Building2, FileImage, FilePlus2, Layers3 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -40,6 +40,22 @@ export default function ClientAreaPage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [formData, setFormData] = useState<ClientDemandForm>(emptyForm);
 
+  const loadClientTasks = useCallback(
+    async (clientUserId: string, { showLoading = false } = {}) => {
+      if (showLoading) {
+        setLoading(true);
+      }
+
+      const data = await getTasks({
+        viewerRole: "client",
+        clientUserId,
+      });
+      setTasks(data);
+      setLoading(false);
+    },
+    []
+  );
+
   useEffect(() => {
     if (!user) {
       return;
@@ -60,8 +76,8 @@ export default function ClientAreaPage() {
       requesterName: prev.requesterName || user.name,
     }));
 
-    void loadClientTasks(user.id);
-  }, [router, user]);
+    void loadClientTasks(user.id, { showLoading: true });
+  }, [loadClientTasks, router, user]);
 
   useEffect(() => {
     if (!user || !isClientRole(user.role)) {
@@ -84,17 +100,7 @@ export default function ClientAreaPage() {
       window.clearInterval(intervalId);
       window.removeEventListener("focus", handleFocus);
     };
-  }, [user]);
-
-  async function loadClientTasks(clientUserId: string) {
-    setLoading(true);
-    const data = await getTasks({
-      viewerRole: "client",
-      clientUserId,
-    });
-    setTasks(data);
-    setLoading(false);
-  }
+  }, [loadClientTasks, user]);
 
   function handleChange(
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
