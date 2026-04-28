@@ -78,12 +78,23 @@ export default function TaskDetailView({
           : "Tarefa marcada como concluida."
         : trimmedUpdate;
     const assigneeChanged = assignee.trim() !== (task.assignee ?? "").trim();
+    const statusChanged = (nextStatus ?? status) !== task.status;
     const assigneeMessage = assigneeChanged
       ? `Troca de funcionario: ${task.assignee || "Nao atribuido"} -> ${
           assignee.trim() || "Nao atribuido"
         }`
       : "";
-    const finalUpdateMessage = [assigneeMessage, completionMessage]
+    const statusMessage =
+      statusChanged && nextStatus !== "done"
+        ? `Status alterado: ${statusLabels[task.status]} -> ${
+            statusLabels[nextStatus ?? status]
+          }`
+        : "";
+    const finalUpdateMessage = [
+      assigneeMessage,
+      statusMessage,
+      completionMessage,
+    ]
       .filter(Boolean)
       .join("\n\n");
     const updatedTask: Task = {
