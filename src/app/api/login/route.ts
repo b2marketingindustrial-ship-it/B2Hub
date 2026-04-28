@@ -1,5 +1,7 @@
 import { hashPassword, isPasswordHash, verifyPassword } from "@/app/src/lib/auth";
 import { ensureDatabaseSetup, query } from "@/app/src/lib/db";
+import { normalizeRole } from "@/app/src/lib/roles";
+import { NextResponse } from "next/server";
 
 type UserRow = {
   id: string;
@@ -57,10 +59,18 @@ export async function POST(req: Request) {
       );
     }
 
-    return Response.json(
+    const normalizedRole = normalizeRole(matchedUser.role);
+    if (normalizedRole === "guest") {
+      return Response.json(
+        { message: "Perfil de acesso sem permissao no sistema" },
+        { status: 403 }
+      );
+    }
+
+    const response = NextResponse.json(
       {
         name: matchedUser.name,
-        role: matchedUser.role,
+        role: normalizedRole,
         id: matchedUser.id,
         email: matchedUser.email,
         companyName: matchedUser.company_name ?? "",
@@ -68,6 +78,16 @@ export async function POST(req: Request) {
       },
       { status: 200 }
     );
+
+    response.cookies.set("user-role", normalizedRole, {
+      httpOnly: false,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    return response;
   }
 
   return Response.json(

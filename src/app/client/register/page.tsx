@@ -57,7 +57,7 @@ export default function ClientRegisterPage() {
         },
         body: JSON.stringify({
           ...formData,
-          role: "client",
+          role: "cliente",
         }),
       });
 
@@ -73,11 +73,13 @@ export default function ClientRegisterPage() {
         JSON.stringify({
           id: data.id,
           name: data.name,
-          role: "client",
+          role: "cliente",
           email: data.email,
           companyName: data.companyName,
         })
       );
+      document.cookie =
+        "user-role=cliente; path=/; max-age=604800; SameSite=Lax";
 
       toast.success("Cliente cadastrado com sucesso.");
       router.push("/client-area");

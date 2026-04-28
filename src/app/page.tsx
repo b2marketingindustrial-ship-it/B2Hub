@@ -3,10 +3,10 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { Users } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Loader from "./components/Loader";
 import NavBar from "./components/Navbar";
+import { isClientRole } from "./src/lib/roles";
 
 type FormData = {
   email: string;
@@ -19,7 +19,6 @@ export default function Login() {
     password: "",
   });
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
@@ -56,7 +55,7 @@ export default function Login() {
         return;
       }
 
-      if (data.role === "client") {
+      if (isClientRole(data.role)) {
         toast.error(
           "Este login e exclusivo para funcionarios. Clientes devem usar o portal do cliente."
         );
@@ -76,7 +75,7 @@ export default function Login() {
 
       toast.success(data.message);
       setTimeout(() => {
-        router.push("/dashboard");
+        window.location.assign("/dashboard");
       }, 900);
     } catch {
       toast.error("Nao foi possivel conectar ao login.");

@@ -14,6 +14,7 @@ import { motion } from "framer-motion";
 import type { User } from "../src/types/typeUser";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { canManageEmployees, isClientRole } from "../src/lib/roles";
 
 export default function NavBar({ user }: { user: User | null }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -25,22 +26,22 @@ export default function NavBar({ user }: { user: User | null }) {
 
   const navLinks = [
     {
-      href: user?.role === "client" ? "/client-area" : "/dashboard",
-      label: user?.role === "client" ? "Area do cliente" : "Dashboard",
-      icon: user?.role === "client" ? Building2 : LayoutDashboard,
+      href: isClientRole(user?.role) ? "/client-area" : "/dashboard",
+      label: isClientRole(user?.role) ? "Area do cliente" : "Dashboard",
+      icon: isClientRole(user?.role) ? Building2 : LayoutDashboard,
       show: isLoggedIn && user?.role !== "guest",
     },
     {
       href: "/register",
       label: "Cadastrar funcionario",
       icon: Settings,
-      show: user?.role === "admin",
+      show: canManageEmployees(user?.role),
     },
     {
       href: "/client/register",
       label: "Cadastrar cliente",
       icon: Building2,
-      show: user?.role === "admin",
+      show: canManageEmployees(user?.role),
     },
   ].filter((item) => item.show);
 
@@ -54,6 +55,7 @@ export default function NavBar({ user }: { user: User | null }) {
 
   function handleLogout() {
     localStorage.removeItem("user");
+    document.cookie = "user-role=; path=/; max-age=0; SameSite=Lax";
     closeMenu();
     router.push("/");
   }

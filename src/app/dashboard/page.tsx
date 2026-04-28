@@ -23,6 +23,7 @@ import {
   default as getTasks,
   updateTask,
 } from "../utils/GetTasks";
+import { canManageEmployees, isClientRole } from "../src/lib/roles";
 import useUser from "../utils/useUser";
 
 type Column = {
@@ -44,12 +45,16 @@ export default function Dashboard() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   useEffect(() => {
-    if (!user || user.role === "guest") {
+    if (!user) {
+      return;
+    }
+
+    if (user.role === "guest") {
       router.replace("/");
       return;
     }
 
-    if (user?.role === "client") {
+    if (isClientRole(user?.role)) {
       router.replace("/client-area");
       return;
     }
@@ -58,7 +63,7 @@ export default function Dashboard() {
   }, [user, router]);
 
   useEffect(() => {
-    if (!user || user.role === "guest" || user.role === "client") {
+    if (!user || user.role === "guest" || isClientRole(user.role)) {
       return;
     }
 
@@ -316,7 +321,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {user?.role === "admin" && (
+              {canManageEmployees(user?.role) && (
                 <button
                   onClick={openCreateModal}
                   className="
@@ -469,7 +474,7 @@ export default function Dashboard() {
       {selectedTask && (
         <TaskModal
           task={selectedTask}
-          canManage={user?.role === "admin"}
+          canManage={canManageEmployees(user?.role)}
           loading={savingTask}
           currentUserName={user?.name}
           currentUserRole={user?.role}

@@ -1,7 +1,7 @@
 type CreateUserRequest = {
   name: string;
   email: string;
-  role: string;
+  role: "cliente" | "admin" | "ceo";
   password: string;
   companyName?: string;
 };

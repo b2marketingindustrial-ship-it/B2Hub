@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import NavBar from "../components/Navbar";
 import TaskCard from "../components/TaskCard";
 import TaskModal from "../components/TaskModal";
+import { isClientRole } from "../src/lib/roles";
 import type { Task, TaskPayload } from "../src/types/TaskCardType";
 import useUser from "../utils/useUser";
 import getTasks, { createTask } from "../utils/GetTasks";
@@ -41,7 +42,6 @@ export default function ClientAreaPage() {
 
   useEffect(() => {
     if (!user) {
-      router.replace("/");
       return;
     }
 
@@ -50,7 +50,7 @@ export default function ClientAreaPage() {
       return;
     }
 
-    if (user.role !== "client") {
+    if (!isClientRole(user.role)) {
       router.replace("/dashboard");
       return;
     }
@@ -64,7 +64,7 @@ export default function ClientAreaPage() {
   }, [router, user]);
 
   useEffect(() => {
-    if (!user || user.role !== "client") {
+    if (!user || !isClientRole(user.role)) {
       return;
     }
 

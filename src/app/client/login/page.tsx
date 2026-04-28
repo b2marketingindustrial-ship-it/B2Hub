@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Loader from "../../components/Loader";
 import NavBar from "../../components/Navbar";
+import { isClientRole } from "../../src/lib/roles";
 
 type FormData = {
   email: string;
@@ -56,7 +57,7 @@ export default function ClientLoginPage() {
         return;
       }
 
-      if (data.role !== "client") {
+      if (!isClientRole(data.role)) {
         toast.error(
           "Este acesso e exclusivo para clientes. Funcionarios devem usar o login interno."
         );

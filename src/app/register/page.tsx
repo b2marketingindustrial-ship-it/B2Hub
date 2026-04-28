@@ -1,10 +1,12 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ShieldPlus, UserPlus2 } from "lucide-react";
 import NavBar from "../components/Navbar";
 import Loader from "../components/Loader";
+import { canManageEmployees } from "../src/lib/roles";
 import useUser from "../utils/useUser";
 
 type RegisterFormData = {
@@ -16,6 +18,7 @@ type RegisterFormData = {
 
 export default function Register() {
   const user = useUser();
+  const router = useRouter();
   const [formData, setFormData] = useState<RegisterFormData>({
     name: "",
     email: "",
@@ -23,6 +26,12 @@ export default function Register() {
     password: "",
   });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user && !canManageEmployees(user.role)) {
+      router.replace("/");
+    }
+  }, [router, user]);
 
   function handleChange(
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -196,11 +205,8 @@ export default function Register() {
                     <option value="admin" className="bg-slate-900">
                       Admin
                     </option>
-                    <option value="staff" className="bg-slate-900">
-                      Staff
-                    </option>
-                    <option value="guest" className="bg-slate-900">
-                      Guest
+                    <option value="ceo" className="bg-slate-900">
+                      CEO
                     </option>
                   </select>
                 </div>
