@@ -3,7 +3,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
-  title: "KanbamHub",
+  title: "B2 Hub",
   description: "Painel moderno para organizacao de tarefas e operacao do time.",
 };
 
