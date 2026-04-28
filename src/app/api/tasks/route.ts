@@ -20,6 +20,7 @@ type TaskBody = {
   requesterName?: string;
   referenceImageUrl?: string;
   updateMessage?: string;
+  updateAttachment?: string;
   updateAuthorName?: string;
   updateAuthorRole?: string;
 };
@@ -45,6 +46,7 @@ type TaskUpdateRow = {
   message: string;
   author_name: string;
   author_role: string;
+  attachment: string | null;
   created_at: string;
 };
 
@@ -55,6 +57,7 @@ function mapTaskUpdate(row: TaskUpdateRow): TaskUpdate {
     authorName: row.author_name,
     authorRole: row.author_role,
     createdAt: row.created_at,
+    attachment: row.attachment ?? "",
   };
 }
 
@@ -84,7 +87,7 @@ async function attachUpdates(tasks: Task[]) {
   const taskIds = tasks.map((task) => task.id);
   const updatesResult = await query<TaskUpdateRow>(
     `
-      SELECT id, task_id, message, author_name, author_role, created_at
+      SELECT id, task_id, message, author_name, author_role, attachment, created_at
       FROM task_updates
       WHERE task_id = ANY($1::text[])
       ORDER BY created_at DESC
@@ -351,19 +354,21 @@ export async function PATCH(req: Request) {
   );
 
   const updateMessage = body.updateMessage?.trim();
+  const updateAttachment = body.updateAttachment?.trim();
 
-  if (updateMessage) {
+  if (updateMessage || updateAttachment) {
     await query(
       `
-        INSERT INTO task_updates (id, task_id, message, author_name, author_role)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO task_updates (id, task_id, message, author_name, author_role, attachment)
+        VALUES ($1, $2, $3, $4, $5, $6)
       `,
       [
         crypto.randomUUID(),
         body.id,
-        updateMessage,
+        updateMessage || "Anexo enviado.",
         body.updateAuthorName?.trim() || "Equipe",
         body.updateAuthorRole?.trim() || "staff",
+        updateAttachment || "",
       ]
     );
   }

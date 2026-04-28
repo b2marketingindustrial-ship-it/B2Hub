@@ -2,14 +2,14 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Building2, FileImage, FilePlus2, Layers3 } from "lucide-react";
+import { Building2, FilePlus2, Layers3, Paperclip } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import NavBar from "../components/Navbar";
 import TaskCard from "../components/TaskCard";
-import TaskModal from "../components/TaskModal";
 import { isClientRole } from "../src/lib/roles";
 import type { Task, TaskPayload } from "../src/types/TaskCardType";
+import { fileToDataUrl, MAX_ATTACHMENT_SIZE } from "../utils/attachments";
 import useUser from "../utils/useUser";
 import getTasks, { createTask } from "../utils/GetTasks";
 
@@ -19,7 +19,7 @@ type ClientDemandForm = {
   priority: "Alta" | "Média" | "Baixa";
   date: string;
   requesterName: string;
-  referenceImageUrl: string;
+  attachment: string;
 };
 
 const emptyForm: ClientDemandForm = {
@@ -28,7 +28,7 @@ const emptyForm: ClientDemandForm = {
   priority: "Média",
   date: "",
   requesterName: "",
-  referenceImageUrl: "",
+  attachment: "",
 };
 
 export default function ClientAreaPage() {
@@ -37,7 +37,6 @@ export default function ClientAreaPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [formData, setFormData] = useState<ClientDemandForm>(emptyForm);
 
   const loadClientTasks = useCallback(
@@ -113,6 +112,32 @@ export default function ClientAreaPage() {
     }));
   }
 
+  async function handleAttachmentChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (file.size > MAX_ATTACHMENT_SIZE) {
+      toast.error("O anexo deve ter no maximo 9MB.");
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      const attachmentDataUrl = await fileToDataUrl(file);
+      setFormData((prev) => ({
+        ...prev,
+        attachment: attachmentDataUrl,
+      }));
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Nao foi possivel anexar o arquivo.";
+      toast.error(message);
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -140,7 +165,7 @@ export default function ClientAreaPage() {
         createdByRole: "client",
         clientUserId: user.id,
         requesterName: formData.requesterName,
-        referenceImageUrl: formData.referenceImageUrl,
+        referenceImageUrl: formData.attachment,
       };
 
       const newTask = await createTask(payload, {
@@ -341,37 +366,34 @@ export default function ClientAreaPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-200">
-                  URL da imagem de referencia
+                  Anexo
                 </label>
-                <div className="relative">
-                  <FileImage className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-slate-500" />
-                  <input
-                    name="referenceImageUrl"
-                    value={formData.referenceImageUrl}
-                    onChange={handleChange}
-                    type="url"
-                    placeholder="https://..."
-                    className="
-                      w-full rounded-2xl border border-white/10 bg-white/5 py-3 pl-11 pr-4
-                      text-white placeholder:text-slate-500
-                      outline-none transition-colors
-                      focus:border-cyan-400/40 focus:bg-white/8
-                    "
-                  />
+                <div className="rounded-[24px] border border-dashed border-white/10 bg-white/[0.04] p-4">
+                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-3 text-sm font-medium text-cyan-100 transition-colors hover:bg-cyan-400/15">
+                    <Paperclip className="h-4 w-4" />
+                    {formData.attachment ? "Trocar anexo" : "Enviar anexo"}
+                    <input
+                      type="file"
+                      onChange={handleAttachmentChange}
+                      className="sr-only"
+                    />
+                  </label>
+                  <p className="mt-3 text-xs text-slate-500">
+                    Arquivo de ate 9MB para complementar a demanda.
+                  </p>
+                  {formData.attachment && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({ ...prev, attachment: "" }))
+                      }
+                      className="mt-3 text-sm font-medium text-rose-200 hover:text-rose-100"
+                    >
+                      Remover anexo
+                    </button>
+                  )}
                 </div>
               </div>
-
-              {formData.referenceImageUrl && (
-                <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-4">
-                  <p className="text-sm text-slate-400">Preview da referencia</p>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={formData.referenceImageUrl}
-                    alt="Referencia visual"
-                    className="mt-3 h-44 w-full rounded-2xl object-cover"
-                  />
-                </div>
-              )}
 
               <button
                 type="submit"
@@ -439,22 +461,13 @@ export default function ClientAreaPage() {
                 <TaskCard
                   key={task.id}
                   {...task}
-                  onOpen={() => setSelectedTask(task)}
+                  onOpen={() => router.push(`/client-area/tasks/${task.id}`)}
                 />
               ))
             )}
           </div>
         </section>
       </main>
-
-      {selectedTask && (
-        <TaskModal
-          task={selectedTask}
-          currentUserName={user?.name}
-          currentUserRole={user?.role}
-          onClose={() => setSelectedTask(null)}
-        />
-      )}
     </>
   );
 }

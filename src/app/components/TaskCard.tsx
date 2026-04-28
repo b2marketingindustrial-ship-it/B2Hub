@@ -126,7 +126,7 @@ export default function TaskCard({
           {referenceImageUrl && (
             <span className="inline-flex items-center gap-1 text-slate-400">
               <ImageIcon className="h-3.5 w-3.5" />
-              Imagem anexa
+              Anexo
             </span>
           )}
         </div>
@@ -170,17 +170,15 @@ export default function TaskCard({
         </div>
       </div>
 
-      {description && (
-        <button
-          onClick={onOpen}
-          className="
-            mt-4 text-sm font-medium text-cyan-200
-            transition-colors hover:text-cyan-100
-          "
-        >
-          Ver detalhes
-        </button>
-      )}
+      <button
+        onClick={onOpen}
+        className="
+          mt-4 text-sm font-medium text-cyan-200
+          transition-colors hover:text-cyan-100
+        "
+      >
+        Ver detalhes
+      </button>
     </article>
   );
 }

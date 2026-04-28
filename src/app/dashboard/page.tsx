@@ -17,13 +17,10 @@ import { toast } from "sonner";
 import NavBar from "../components/Navbar";
 import NewTaskModal from "../components/NewTaskModal";
 import TaskCard from "../components/TaskCard";
-import TaskModal from "../components/TaskModal";
 import type { Task, TaskPayload } from "../src/types/TaskCardType";
 import {
   createTask,
-  deleteTask,
   default as getTasks,
-  updateTask,
 } from "../utils/GetTasks";
 import { canManageEmployees, isClientRole } from "../src/lib/roles";
 import useUser from "../utils/useUser";
@@ -44,8 +41,8 @@ export default function Dashboard() {
   const [savingTask, setSavingTask] = useState(false);
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [clientSearch, setClientSearch] = useState("");
+  const [selectedColumnTitle, setSelectedColumnTitle] = useState("A fazer");
 
   const loadTasks = useCallback(async ({ showLoading = false } = {}) => {
     if (showLoading) {
@@ -202,25 +199,14 @@ export default function Dashboard() {
   }
 
   function openDescriptionModal(task: Task) {
-    setSelectedTask(task);
-  }
-
-  function closeDescriptionModal() {
-    setSelectedTask(null);
+    router.push(`/dashboard/tasks/${task.id}`);
   }
 
   async function handleSaveTask(taskData: TaskPayload | Task) {
     setSavingTask(true);
 
     try {
-      if ("id" in taskData) {
-        const updatedTask = await updateTask(taskData);
-        setTasks((prev) =>
-          prev.map((task) => (task.id === updatedTask.id ? updatedTask : task))
-        );
-        setSelectedTask(updatedTask);
-        toast.success("Tarefa atualizada com sucesso");
-      } else {
+      if (!("id" in taskData)) {
         const createdTask = await createTask(taskData);
         setTasks((prev) => [createdTask, ...prev]);
         toast.success("Tarefa criada com sucesso");
@@ -236,52 +222,8 @@ export default function Dashboard() {
     }
   }
 
-  async function handleDeleteTask(task: Task) {
-    setSavingTask(true);
-
-    try {
-      await deleteTask(task.id);
-      setTasks((prev) => prev.filter((item) => item.id !== task.id));
-      setSelectedTask(null);
-      toast.success("Tarefa removida com sucesso");
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Nao foi possivel excluir a tarefa";
-      toast.error(message);
-    } finally {
-      setSavingTask(false);
-    }
-  }
-
-  async function handleQuickUpdateTask(task: Task, updateMessage?: string) {
-    setSavingTask(true);
-
-    try {
-      const updatedTask = await updateTask({
-        ...task,
-        updateMessage,
-        updateAuthorName: user?.name || "Equipe",
-        updateAuthorRole: user?.role || "staff",
-      } as Task & {
-        updateMessage?: string;
-        updateAuthorName?: string;
-        updateAuthorRole?: string;
-      });
-      setTasks((prev) =>
-        prev.map((currentTask) =>
-          currentTask.id === updatedTask.id ? updatedTask : currentTask
-        )
-      );
-      setSelectedTask(updatedTask);
-      toast.success("Task sincronizada com a operacao");
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Nao foi possivel atualizar a tarefa";
-      toast.error(message);
-    } finally {
-      setSavingTask(false);
-    }
-  }
+  const selectedColumn =
+    columns.find((column) => column.title === selectedColumnTitle) ?? columns[0];
 
   return (
     <>
@@ -399,7 +341,7 @@ export default function Dashboard() {
                 </h2>
                 <p className="max-w-3xl text-sm leading-7 text-slate-300">
                   Cada demanda do cliente chega para o time com empresa, solicitante,
-                  contexto, imagem de referencia e pronta para designacao operacional.
+                  contexto, anexo e pronta para designacao operacional.
                 </p>
               </div>
 
@@ -477,66 +419,96 @@ export default function Dashboard() {
             </div>
           </section>
 
-          <section className="mt-8 grid gap-6 xl:grid-cols-4">
-            {columns.map((column) => (
-              <div
-                key={column.title}
-                className={`
-                  rounded-[30px] border p-5 shadow-[0_22px_55px_rgba(2,8,23,0.2)]
-                  ${column.accent}
-                `}
-              >
-                <div className="mb-5 flex items-start justify-between gap-4">
-                  <div>
-                    <h2 className="text-lg font-semibold text-white">
-                      {column.title}
-                    </h2>
-                    <p className="mt-1 text-sm leading-6 text-slate-400">
+          <section className="mt-8 space-y-6">
+            <div className="grid gap-4 md:grid-cols-4">
+              {columns.map((column) => {
+                const selected = column.title === selectedColumn.title;
+
+                return (
+                  <button
+                    key={column.title}
+                    type="button"
+                    onClick={() => setSelectedColumnTitle(column.title)}
+                    className={`
+                      rounded-[28px] border p-5 text-left
+                      shadow-[0_18px_42px_rgba(2,8,23,0.18)]
+                      transition-colors
+                      ${column.accent}
+                      ${
+                        selected
+                          ? "ring-2 ring-cyan-300/45"
+                          : "hover:border-cyan-400/30"
+                      }
+                    `}
+                  >
+                    <p className="text-sm text-slate-300">{column.title}</p>
+                    <p className="mt-2 text-4xl font-semibold text-white">
+                      {column.tasks.length}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-400">
                       {column.description}
                     </p>
-                  </div>
+                  </button>
+                );
+              })}
+            </div>
 
-                  <span
+            <div
+              className={`
+                rounded-[30px] border p-5 shadow-[0_22px_55px_rgba(2,8,23,0.2)]
+                ${selectedColumn.accent}
+              `}
+            >
+              <div className="mb-5 flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-white">
+                    {selectedColumn.title}
+                  </h2>
+                  <p className="mt-1 text-sm leading-6 text-slate-400">
+                    {selectedColumn.description}
+                  </p>
+                </div>
+
+                <span
+                  className="
+                    rounded-full border border-white/10 bg-slate-950/40 px-3 py-1
+                    text-sm text-slate-200
+                  "
+                >
+                  {selectedColumn.tasks.length}
+                </span>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {loading ? (
+                  <div
                     className="
-                      rounded-full border border-white/10 bg-slate-950/40 px-3 py-1
-                      text-sm text-slate-200
+                      rounded-[24px] border border-dashed border-white/10
+                      bg-slate-950/20 px-4 py-10 text-center text-sm text-slate-400
                     "
                   >
-                    {column.tasks.length}
-                  </span>
-                </div>
-
-                <div className="space-y-4">
-                  {loading ? (
-                    <div
-                      className="
-                        rounded-[24px] border border-dashed border-white/10
-                        bg-slate-950/20 px-4 py-10 text-center text-sm text-slate-400
-                      "
-                    >
-                      Carregando tarefas...
-                    </div>
-                  ) : column.tasks.length === 0 ? (
-                    <div
-                      className="
-                        rounded-[24px] border border-dashed border-white/10
-                        bg-slate-950/20 px-4 py-10 text-center text-sm text-slate-400
-                      "
-                    >
-                      {column.emptyLabel}
-                    </div>
-                  ) : (
-                    column.tasks.map((task) => (
-                      <TaskCard
-                        key={task.id}
-                        {...task}
-                        onOpen={() => openDescriptionModal(task)}
-                      />
-                    ))
-                  )}
-                </div>
+                    Carregando tarefas...
+                  </div>
+                ) : selectedColumn.tasks.length === 0 ? (
+                  <div
+                    className="
+                      rounded-[24px] border border-dashed border-white/10
+                      bg-slate-950/20 px-4 py-10 text-center text-sm text-slate-400
+                    "
+                  >
+                    {selectedColumn.emptyLabel}
+                  </div>
+                ) : (
+                  selectedColumn.tasks.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      {...task}
+                      onOpen={() => openDescriptionModal(task)}
+                    />
+                  ))
+                )}
               </div>
-            ))}
+            </div>
           </section>
         </motion.main>
       </div>
@@ -550,18 +522,6 @@ export default function Dashboard() {
         />
       )}
 
-      {selectedTask && (
-        <TaskModal
-          task={selectedTask}
-          canManage={canManageEmployees(user?.role)}
-          loading={savingTask}
-          currentUserName={user?.name}
-          currentUserRole={user?.role}
-          onClose={closeDescriptionModal}
-          onDelete={handleDeleteTask}
-          onQuickUpdate={handleQuickUpdateTask}
-        />
-      )}
     </>
   );
 }

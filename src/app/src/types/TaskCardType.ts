@@ -8,6 +8,7 @@ export type TaskUpdate = {
   authorName: string;
   authorRole: string;
   createdAt: string;
+  attachment?: string;
 };
 
 export type Task = {

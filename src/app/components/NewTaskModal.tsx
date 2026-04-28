@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, X } from "lucide-react";
+import { Loader2, Paperclip, X } from "lucide-react";
 import { toast } from "sonner";
 import type { Priority, Status, Task, TaskPayload } from "../src/types/TaskCardType";
+import { fileToDataUrl, MAX_ATTACHMENT_SIZE } from "../utils/attachments";
 
 type TaskFormData = {
   title: string;
@@ -13,6 +14,7 @@ type TaskFormData = {
   date: string;
   description: string;
   assignee: string;
+  referenceImageUrl: string;
 };
 
 type Props = {
@@ -30,6 +32,7 @@ const emptyForm: TaskFormData = {
   date: "",
   description: "",
   assignee: "",
+  referenceImageUrl: "",
 };
 
 function formatDateForDisplay(date?: string) {
@@ -103,6 +106,7 @@ function getFormData(task?: Task | null): TaskFormData {
     date: formatDateForDisplay(task.date),
     description: task.description ?? "",
     assignee: task.assignee ?? "",
+    referenceImageUrl: task.referenceImageUrl ?? "",
   };
 }
 
@@ -160,6 +164,29 @@ export default function NewTaskModal({
     }
 
     await onSubmit(payload);
+  }
+
+  async function handleAttachmentChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (file.size > MAX_ATTACHMENT_SIZE) {
+      toast.error("O anexo deve ter no maximo 9MB.");
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      const attachmentDataUrl = await fileToDataUrl(file);
+      updateField("referenceImageUrl", attachmentDataUrl);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Nao foi possivel anexar o arquivo.";
+      toast.error(message);
+    }
   }
 
   const isEditing = Boolean(initialData);
@@ -362,6 +389,42 @@ export default function NewTaskModal({
                 focus:border-cyan-400/40 focus:bg-white/8
               "
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-200">
+              Anexo
+            </label>
+            <div className="rounded-[24px] border border-dashed border-white/10 bg-white/[0.04] p-4">
+              <label
+                className="
+                  flex cursor-pointer items-center justify-center gap-2 rounded-2xl
+                  border border-cyan-400/20 bg-cyan-400/10 px-4 py-3
+                  text-sm font-medium text-cyan-100 transition-colors
+                  hover:bg-cyan-400/15
+                "
+              >
+                <Paperclip className="h-4 w-4" />
+                {formData.referenceImageUrl ? "Trocar anexo" : "Enviar anexo"}
+                <input
+                  type="file"
+                  onChange={handleAttachmentChange}
+                  className="sr-only"
+                />
+              </label>
+              <p className="mt-3 text-xs text-slate-500">
+                Arquivo de ate 9MB. O anexo fica salvo junto da tarefa.
+              </p>
+              {formData.referenceImageUrl && (
+                <button
+                  type="button"
+                  onClick={() => updateField("referenceImageUrl", "")}
+                  className="mt-3 text-sm font-medium text-rose-200 hover:text-rose-100"
+                >
+                  Remover anexo
+                </button>
+              )}
+            </div>
           </div>
 
           <div

@@ -104,6 +104,7 @@ async function setupDatabase() {
         message TEXT NOT NULL,
         author_name TEXT NOT NULL,
         author_role TEXT NOT NULL,
+        attachment TEXT,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `);
@@ -126,6 +127,11 @@ async function setupDatabase() {
     await client.query(`
       ALTER TABLE tasks
       ADD COLUMN IF NOT EXISTS reference_image_url TEXT
+    `);
+
+    await client.query(`
+      ALTER TABLE task_updates
+      ADD COLUMN IF NOT EXISTS attachment TEXT
     `);
 
     await client.query(`
