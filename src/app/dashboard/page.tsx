@@ -8,6 +8,8 @@ import {
   Clock3,
   Flame,
   Plus,
+  Search,
+  X,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -43,6 +45,7 @@ export default function Dashboard() {
   const [taskModalOpen, setTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [clientSearch, setClientSearch] = useState("");
 
   useEffect(() => {
     if (!user) {
@@ -104,19 +107,26 @@ export default function Dashboard() {
     return taskDate < today;
   }
 
-  const lateTasks = tasks.filter((task) => isLate(task));
-  const tasksTodo = tasks.filter(
+  const normalizedClientSearch = clientSearch.trim().toLowerCase();
+  const filteredTasks = normalizedClientSearch
+    ? tasks.filter((task) =>
+        (task.client ?? "").toLowerCase().includes(normalizedClientSearch)
+      )
+    : tasks;
+
+  const lateTasks = filteredTasks.filter((task) => isLate(task));
+  const tasksTodo = filteredTasks.filter(
     (task) => task.status === "todo" && !isLate(task)
   );
-  const tasksDoing = tasks.filter(
+  const tasksDoing = filteredTasks.filter(
     (task) => task.status === "doing" && !isLate(task)
   );
-  const tasksDone = tasks.filter((task) => task.status === "done");
+  const tasksDone = filteredTasks.filter((task) => task.status === "done");
 
   const stats = [
     {
       label: "Total",
-      value: tasks.length,
+      value: filteredTasks.length,
       icon: BarChart3,
       accent: "from-sky-400/25 to-cyan-400/10 text-cyan-200",
     },
@@ -140,7 +150,8 @@ export default function Dashboard() {
     },
     {
       label: "Demandas cliente",
-      value: tasks.filter((task) => task.createdByRole === "client").length,
+      value: filteredTasks.filter((task) => task.createdByRole === "client")
+        .length,
       icon: Building2,
       accent: "from-cyan-400/25 to-teal-400/10 text-cyan-100",
     },
@@ -392,8 +403,73 @@ export default function Dashboard() {
               <div className="rounded-[24px] border border-white/10 bg-slate-950/30 px-5 py-4">
                 <p className="text-sm text-slate-400">Solicitacoes do cliente</p>
                 <p className="mt-2 text-3xl font-semibold text-white">
-                  {tasks.filter((task) => task.createdByRole === "client").length}
+                  {
+                    filteredTasks.filter(
+                      (task) => task.createdByRole === "client"
+                    ).length
+                  }
                 </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="mt-8">
+            <div
+              className="
+                flex flex-col gap-4 rounded-[28px] border border-white/10
+                bg-slate-950/30 p-4 shadow-[0_18px_50px_rgba(2,8,23,0.18)]
+                md:flex-row md:items-center md:justify-between
+              "
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <div
+                  className="
+                    flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl
+                    border border-cyan-400/20 bg-cyan-400/10 text-cyan-100
+                  "
+                >
+                  <Search className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-white">
+                    Filtrar por cliente
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {normalizedClientSearch
+                      ? `${filteredTasks.length} de ${tasks.length} tarefas exibidas`
+                      : "Pesquise pelo nome da empresa ou cliente"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex w-full gap-2 md:max-w-md">
+                <input
+                  value={clientSearch}
+                  onChange={(event) => setClientSearch(event.target.value)}
+                  type="search"
+                  placeholder="Buscar cliente..."
+                  className="
+                    h-11 min-w-0 flex-1 rounded-2xl border border-white/10
+                    bg-white/5 px-4 text-sm text-white
+                    outline-none transition-colors placeholder:text-slate-500
+                    focus:border-cyan-400/40 focus:bg-white/8
+                  "
+                />
+
+                {normalizedClientSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setClientSearch("")}
+                    aria-label="Limpar filtro"
+                    className="
+                      flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl
+                      border border-white/10 text-slate-300 transition-colors
+                      hover:border-cyan-400/30 hover:bg-cyan-400/10 hover:text-cyan-100
+                    "
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             </div>
           </section>
