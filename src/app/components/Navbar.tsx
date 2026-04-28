@@ -3,6 +3,7 @@
 import {
   BriefcaseBusiness,
   Building2,
+  ChartNoAxesColumnIncreasing,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -30,6 +31,12 @@ export default function NavBar({ user }: { user: User | null }) {
       label: isClientRole(user?.role) ? "Area do cliente" : "Dashboard",
       icon: isClientRole(user?.role) ? Building2 : LayoutDashboard,
       show: isLoggedIn && user?.role !== "guest",
+    },
+    {
+      href: "/client-area/metrics",
+      label: "Metricas (em desenvolvimento)",
+      icon: ChartNoAxesColumnIncreasing,
+      show: isClientRole(user?.role),
     },
     {
       href: "/register",
