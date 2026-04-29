@@ -33,12 +33,6 @@ export default function NavBar({ user }: { user: User | null }) {
       show: isLoggedIn && user?.role !== "guest",
     },
     {
-      href: "/client-area/metrics",
-      label: "Metricas (em desenvolvimento)",
-      icon: ChartNoAxesColumnIncreasing,
-      show: isClientRole(user?.role),
-    },
-    {
       href: "/register",
       label: "Cadastrar funcionario",
       icon: Settings,
