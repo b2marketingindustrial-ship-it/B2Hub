@@ -1,4 +1,4 @@
-import { createUser } from "@/app/src/services/userService";
+import { createUser, listEmployees } from "@/app/src/services/userService";
 import { ensureDatabaseSetup } from "@/app/src/lib/db";
 import {
   canManageEmployees,
@@ -14,6 +14,34 @@ type CreateUserRequest = {
   password: string;
   companyName?: string;
 };
+
+async function ensureEmployeeManager() {
+  const cookieStore = await cookies();
+  const requesterRole = cookieStore.get("user-role")?.value;
+
+  return canManageEmployees(requesterRole);
+}
+
+export async function GET() {
+  await ensureDatabaseSetup();
+
+  if (!(await ensureEmployeeManager())) {
+    return Response.json(
+      { message: "Apenas admin ou ceo podem listar funcionarios" },
+      { status: 403 }
+    );
+  }
+
+  try {
+    const employees = await listEmployees();
+    return Response.json(employees, { status: 200 });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Internal Server Error";
+
+    return Response.json({ message }, { status: 500 });
+  }
+}
 
 export async function POST(req: Request) {
   await ensureDatabaseSetup();
@@ -37,10 +65,7 @@ export async function POST(req: Request) {
   }
 
   if (!isClientRole(requestedRole)) {
-    const cookieStore = await cookies();
-    const requesterRole = cookieStore.get("user-role")?.value;
-
-    if (!canManageEmployees(requesterRole)) {
+    if (!(await ensureEmployeeManager())) {
       return Response.json(
         { message: "Apenas admin ou ceo podem cadastrar funcionarios" },
         { status: 403 }

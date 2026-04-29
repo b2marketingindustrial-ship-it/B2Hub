@@ -3,12 +3,12 @@
 import {
   BriefcaseBusiness,
   Building2,
-  ChartNoAxesColumnIncreasing,
   LayoutDashboard,
   LogOut,
   Menu,
   X,
   Settings,
+  UsersRound,
 } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -36,6 +36,12 @@ export default function NavBar({ user }: { user: User | null }) {
       href: "/register",
       label: "Cadastrar funcionario",
       icon: Settings,
+      show: canManageEmployees(user?.role),
+    },
+    {
+      href: "/employees",
+      label: "Gerenciar funcionarios",
+      icon: UsersRound,
       show: canManageEmployees(user?.role),
     },
     {
