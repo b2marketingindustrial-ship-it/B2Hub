@@ -267,7 +267,8 @@ export default function Dashboard() {
 
                 <div className="space-y-3">
                   <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                    Quadro vivo para acompanhar tarefas, ritmo e prioridades.
+                    Quadro de chamados aqui você verifica todos os chamados dos clientes B2, 
+                    ritmo e prioridades.
                   </h1>
                   <p className="max-w-xl text-sm leading-7 text-slate-300 sm:text-base">
                     Visual mais limpo, leitura mais rapida e uma rotina de tasks
