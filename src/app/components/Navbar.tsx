@@ -16,6 +16,7 @@ import type { User } from "../src/types/typeUser";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { canManageEmployees, isClientRole } from "../src/lib/roles";
+import { label } from "framer-motion/client";
 
 export default function NavBar({ user }: { user: User | null }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -50,6 +51,13 @@ export default function NavBar({ user }: { user: User | null }) {
       icon: Building2,
       show: canManageEmployees(user?.role),
     },
+
+    {
+    href: "/clients",
+    label: "Clientes Cadastrados",
+    icon:Building2,
+    show:canManageEmployees(user?.role)
+    }
   ].filter((item) => item.show);
 
   function toggleMenu() {
