@@ -1,5 +1,4 @@
 import { query } from "../lib/db";
-import { ensureDatabaseSetup} from "../lib/db";
 
 
 type UserRow = {
@@ -22,7 +21,6 @@ function mapClient(row: UserRow) {
 }
 
 export async function listClients () {
-  await ensureDatabaseSetup();
 
   const clients = await query <UserRow> (`
     SELECT id, name, email, role, company_name, created_at
@@ -30,5 +28,8 @@ export async function listClients () {
     WHERE role = 'client'
     ORDER BY created_at DESC, name ASC
     `)
+    if (clients.rows.length === 0) {
+    throw new Error ("CLIENT_NOT_FOUND")
+    }
     return clients.rows.map(mapClient)
 }
